@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Auditory Perception Study</title>
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script src="jspsych-6.2.0/jspsych.js"></script>
+  <script type="text/javascript" src="lib/jspsych-pavlovia-3.0.0.js"></script>
+  <script src="jspsych-6.2.0/plugins/jspsych-image-keyboard-response.js"></script>
+  <script src="jspsych-6.2.0/plugins/jspsych-video-keyboard-response.js"></script>
+  <script src="jspsych-6.2.0/plugins/jspsych-call-function.js"></script>
+  <script src="jspsych-6.2.0/plugins/jspsych-audio-button-response.js"></script>
+  <script src="jspsych-6.2.0/plugins/jspsych-audio-keyboard-response.js"></script>
+  <script src="jspsych-6.2.0/plugins/jspsych-html-keyboard-response.js"></script>
+  <script src="jspsych-6.2.0/plugins/jspsych-html-button-response.js"></script>
+  <script src="jspsych-6.2.0/plugins/jspsych-html-slider-response.js"></script>
+  <script src="jspsych-6.2.0/plugins/jspsych-survey-multi-choice.js"></script>
+  <script src="jspsych-6.2.0/plugins/jspsych-survey-text.js"></script>
+  <script src="jspsych-6.2.0/plugins/jspsych-fullscreen.js"></script>
+  <script src="jspsych-6.2.0/plugins/jspsych-instructions.js"></script>
+  <script src="jspsych-6.2.0/plugins/jspsych-external-html.js"></script>
+  <script src="jspsych-6.2.0/plugins/jspsych-sentence-resp.js"></script>
+
+  <script>
+    //Assign the counterbalance version as well as the instruction condition
+    var counterbalance = Math.floor(Math.random() * 3) + 1 //this is the selected counterbalance version
+    console.log("counterbalance version is...", counterbalance);
+
+
+    jsPsych.data.addProperties({
+      counterbalance: counterbalance
+    }); //add subject id to data file
+  </script>
+
+  <script src="audcheck.js"></script>
+  <script src="slTrain.js"></script>
+  <script src="slFamiliarity.js"></script>
+  <script src="targetDetection.js"></script>
+
+  <link href="jspsych-6.2.0/css/jspsych.css" rel="stylesheet" type="text/css">
+</head>
+<style>
+  body {
+    background-color: gray;
+  }
+</style>
+
+
+<body>
+
+  <script>
+    //Participant Identifier
+    var identifier = jsPsych.randomization.randomID(15); //random alphanumeric identifier
+    jsPsych.data.addProperties({
+      ParticipantID: identifier
+    }); //random participant id to data
+
+    //IMPORTANT VARIABLES//
+    var timeline = []; //specify the jsPsych timeline to which all trials/blocks are pushed
+
+    /********************/
+    /** PAVLOVIA INIT **/
+    /********************/
+
+    //Open the connection with Pavlovia
+    var pavlovia_init = {
+      type: "pavlovia",
+      command: "init"
+    };
+
+  //  timeline.push(pavlovia_init);
+
+
+
+
+    /*************/
+    /** CONSENT **/
+    /*************/
+
+    var LOI = {
+      type: 'instructions',
+      pages: [
+        'Welcome to the study. On the next page, you will see the <b>Letter of Information</b>. Please read this document carefully before agreeing to participate in the study.',
+        '<p>Please read this Letter of Information. When you are ready to continue, scroll to the bottom of the page and click "Next".</p><embed src="consent/LOI.pdf" width="800px" height="2100px" />'
+      ],
+      show_clickable_nav: true,
+      allow_backward: false
+    };
+
+  //  timeline.push(LOI);
+
+
+    //function to make sure consent box is clicked before proceeding
+    var check_consent = function(elem) {
+      if ($('#consent_checkbox').is(':checked')) {
+        return true;
+      } else {
+        alert("If you wish to participate, you must check YES. If you do not consent, simply exit out of this tab.");
+        return false;
+      }
+      return false;
+    };
+
+
+    //consent html should be in subfolder labeled 'consent'
+    var consent_trial = {
+      type: "external-html",
+      url: "consent/consent.html",
+      cont_btn: "start",
+      check_fn: check_consent
+    };
+
+//  timeline.push(consent_trial);
+
+
+    /**************************/
+    /** AUDITORY CALIBRATION **/
+    /**************************/
+
+    /*
+    Loaded from audcheck.js
+
+    This short auditory calibration involves
+    a volume adjustment (in which participants
+    must adjust their volume so a noise file
+    is being played at a comfortable listening
+    level). It also involves a short headphone
+    assessment (Wood et al., 2017)
+
+    The variable to push to the timeline is
+    called audcheck, and the variable containing
+    the sound files for preloading can be
+    specified using the return_audcheck_folder()
+    function
+    */
+
+  //  timeline.push(audcheck);
+    var CALIB_SOUNDS = return_audcheck_folder(); //function from audcheck.js
+
+    /**************************/
+    /** SPEECH INDUCTION TASK**/
+    /**************************/
+    /*
+
+    Participants hear 48 sounds (all 12 syllables in both their original form, and their 3-formant SWS form, presented twice).
+
+    */
+
+
+
+    var speech_instruct = {
+      type: 'instructions',
+      pages: [
+        'Welcome to the experiment. Click next to begin.',
+        '<p>In this part of the study, you will listen to speech syllables (for example, "ba") produced by a human talker.</p><p>Each syllable will be followed by a heavily distorted version of itself, which may be difficult to understand. These syllables are considered a <b>matched pair</b> because the second syllable is a distorted version of the first syllable.</p><p>Listen carefully to each pair, as later you will be asked to identify whether the syllables are part of the same pair or not.</p><p>You will hear 12 pairs in total, each presented 2 times.</p>',
+        'When you are ready to begin, please advance the screen by pressing the next button.'
+      ],
+      show_clickable_nav: true
+    };
+
+
+    var sp_timelinevars = [
+    {sound1: 'sounds/induction/fe_C.wav', sound2: 'sounds/induction/fe_SWS.wav', syllable: 'fee'},
+    {sound1: 'sounds/induction/fu_C.wav', sound2: 'sounds/induction/fu_SWS.wav', syllable: 'foo'},
+    {sound1: 'sounds/induction/ge_C.wav', sound2: 'sounds/induction/ge_SWS.wav', syllable: 'gee'},
+    {sound1: 'sounds/induction/ko_C.wav', sound2: 'sounds/induction/ko_SWS.wav', syllable: 'koh'},
+    {sound1: 'sounds/induction/me_C.wav', sound2: 'sounds/induction/me_SWS.wav', syllable: 'mee'},
+    {sound1: 'sounds/induction/ni_C.wav', sound2: 'sounds/induction/ni_SWS.wav', syllable: 'nigh'},
+    {sound1: 'sounds/induction/pu_C.wav', sound2: 'sounds/induction/pu_SWS.wav', syllable: 'poo'},
+    {sound1: 'sounds/induction/re_C.wav', sound2: 'sounds/induction/re_SWS.wav', syllable: 'ree'},
+    {sound1: 'sounds/induction/ru_C.wav', sound2: 'sounds/induction/ru_SWS.wav', syllable: 'roo'},
+    {sound1: 'sounds/induction/su_C.wav', sound2: 'sounds/induction/su_SWS.wav', syllable: 'sue'},
+    {sound1: 'sounds/induction/ta_C.wav', sound2: 'sounds/induction/ta_SWS.wav', syllable: 'tah'},
+    {sound1: 'sounds/induction/ti_C.wav', sound2: 'sounds/induction/ti_SWS.wav', syllable: 'tie'},
+    ];
+
+  //  sp_induction_timelinevars = jsPsych.randomization.repeat(sp_timelinevars, 5); //shuffle and double array size to make 60 trials
+
+    var induction_play_speech1 = {
+      type: 'audio-keyboard-response',
+      stimulus: jsPsych.timelineVariable('sound1'),
+      choices: jsPsych.NO_KEYS,
+      trial_duration: 1000
+    };
+
+    var induction_play_speech2 = {
+      type: 'audio-keyboard-response',
+      stimulus: jsPsych.timelineVariable('sound2'),
+      choices: jsPsych.NO_KEYS,
+      trial_ends_after_audio: true
+    };
+
+
+    var transition = {
+    	type: 'html-button-response',
+    	stimulus: 'Press Enter to continue.',
+      choices: ['Enter'],
+    	post_trial_gap: 500
+    };
+
+
+    var speech_procedure = {
+      timeline: [induction_play_speech1, induction_play_speech2, transition],
+      timeline_variables: sp_timelinevars,
+      randomize_order: true,
+      repetitions: 2
+    };
+
+
+    var speech_procedure_final = {
+      timeline: [speech_instruct, speech_procedure]
+    }
+
+
+    timeline.push(speech_procedure_final);
+
+
+//Phase 2 of Induction (testing)//
+//4 of the pairs don't match//
+
+
+var induction_test_timelinevars = [
+{sound1: 'sounds/induction/fe_C.wav', sound2: 'sounds/induction/fe_SWS.wav', syllable: 'fee', correct:0},
+{sound1: 'sounds/induction/fu_C.wav', sound2: 'sounds/induction/fu_SWS.wav', syllable: 'foo', correct:0},
+{sound1: 'sounds/induction/ge_C.wav', sound2: 'sounds/induction/ge_SWS.wav', syllable: 'gee', correct:0},
+{sound1: 'sounds/induction/ko_C.wav', sound2: 'sounds/induction/ko_SWS.wav', syllable: 'koh', correct:0},
+{sound1: 'sounds/induction/me_C.wav', sound2: 'sounds/induction/me_SWS.wav', syllable: 'mee', correct:0},
+{sound1: 'sounds/induction/ni_C.wav', sound2: 'sounds/induction/ni_SWS.wav', syllable: 'nigh', correct:0},
+{sound1: 'sounds/induction/pu_C.wav', sound2: 'sounds/induction/pu_SWS.wav', syllable: 'poo', correct:0},
+{sound1: 'sounds/induction/re_C.wav', sound2: 'sounds/induction/re_SWS.wav', syllable: 'ree', correct:0},
+{sound1: 'sounds/induction/ru_C.wav', sound2: 'sounds/induction/ru_SWS.wav', syllable: 'roo', correct:0},
+{sound1: 'sounds/induction/su_C.wav', sound2: 'sounds/induction/su_SWS.wav', syllable: 'sue', correct:0},
+{sound1: 'sounds/induction/ta_C.wav', sound2: 'sounds/induction/ta_SWS.wav', syllable: 'tah', correct:0},
+{sound1: 'sounds/induction/ti_C.wav', sound2: 'sounds/induction/ti_SWS.wav', syllable: 'tie', correct:0},
+
+{sound1: 'sounds/induction/fe_C.wav', sound2: 'sounds/induction/fe_SWS.wav', syllable: 'fee', correct:0},
+{sound1: 'sounds/induction/fu_C.wav', sound2: 'sounds/induction/fu_SWS.wav', syllable: 'foo', correct:0},
+{sound1: 'sounds/induction/ge_C.wav', sound2: 'sounds/induction/ge_SWS.wav', syllable: 'gee', correct:0},
+{sound1: 'sounds/induction/ko_C.wav', sound2: 'sounds/induction/ko_SWS.wav', syllable: 'koh', correct:0},
+{sound1: 'sounds/induction/me_C.wav', sound2: 'sounds/induction/me_SWS.wav', syllable: 'mee', correct:0},
+{sound1: 'sounds/induction/ni_C.wav', sound2: 'sounds/induction/ni_SWS.wav', syllable: 'nigh', correct:0},
+{sound1: 'sounds/induction/pu_C.wav', sound2: 'sounds/induction/pu_SWS.wav', syllable: 'poo', correct:0},
+{sound1: 'sounds/induction/re_C.wav', sound2: 'sounds/induction/re_SWS.wav', syllable: 'ree', correct:0},
+{sound1: 'sounds/induction/ru_C.wav', sound2: 'sounds/induction/ru_SWS.wav', syllable: 'roo', correct:0},
+{sound1: 'sounds/induction/su_C.wav', sound2: 'sounds/induction/su_SWS.wav', syllable: 'sue', correct:0},
+{sound1: 'sounds/induction/ta_C.wav', sound2: 'sounds/induction/ta_SWS.wav', syllable: 'tah', correct:0},
+{sound1: 'sounds/induction/ti_C.wav', sound2: 'sounds/induction/ti_SWS.wav', syllable: 'tie', correct:0},
+
+{sound1: 'sounds/induction/fe_C.wav', sound2: 'sounds/induction/fe_SWS.wav', syllable: 'fee', correct:0},
+{sound1: 'sounds/induction/fu_C.wav', sound2: 'sounds/induction/fu_SWS.wav', syllable: 'foo', correct:0},
+{sound1: 'sounds/induction/ge_C.wav', sound2: 'sounds/induction/ge_SWS.wav', syllable: 'gee', correct:0},
+{sound1: 'sounds/induction/ko_C.wav', sound2: 'sounds/induction/ko_SWS.wav', syllable: 'koh', correct:0},
+{sound1: 'sounds/induction/me_C.wav', sound2: 'sounds/induction/me_SWS.wav', syllable: 'mee', correct:0},
+{sound1: 'sounds/induction/ni_C.wav', sound2: 'sounds/induction/ni_SWS.wav', syllable: 'nigh', correct:0},
+{sound1: 'sounds/induction/pu_C.wav', sound2: 'sounds/induction/pu_SWS.wav', syllable: 'poo', correct:0},
+{sound1: 'sounds/induction/re_C.wav', sound2: 'sounds/induction/re_SWS.wav', syllable: 'ree', correct:0},
+{sound1: 'sounds/induction/ru_C.wav', sound2: 'sounds/induction/ru_SWS.wav', syllable: 'roo', correct:0},
+{sound1: 'sounds/induction/su_C.wav', sound2: 'sounds/induction/su_SWS.wav', syllable: 'sue', correct:0},
+{sound1: 'sounds/induction/ta_C.wav', sound2: 'sounds/induction/ta_SWS.wav', syllable: 'tah', correct:0},
+{sound1: 'sounds/induction/ti_C.wav', sound2: 'sounds/induction/ti_SWS.wav', syllable: 'tie', correct:0},
+
+{sound1: 'sounds/induction/ru_C.wav', sound2: 'sounds/induction/me_SWS.wav', syllable: 'roo', correct:1},
+{sound1: 'sounds/induction/re_C.wav', sound2: 'sounds/induction/su_SWS.wav', syllable: 'ree', correct:1},
+{sound1: 'sounds/induction/ko_C.wav', sound2: 'sounds/induction/ta_SWS.wav', syllable: 'koh', correct:1},
+{sound1: 'sounds/induction/ti_C.wav', sound2: 'sounds/induction/ge_SWS.wav', syllable: 'tie', correct:1}
+
+];
+
+
+    var speech_procedure_2_instructions = {
+      type: 'html-button-response',
+      stimulus: "<p>You will now be tested on your knowledge of the pairs from the previous task.</p>" +
+              "<p>On each trial, you will listen to a speech syllable, followed by a heavily distorted speech syllable. After hearing both sounds, you wil then be asked to indicate whether those two syllables are a <b>matched pair</b> by pressing the corresponding button.</p>"+
+              "<p>There will be 40 trials in total.</p>",
+      choices: ['Begin']
+    };
+
+    var induction_judgement = {
+      type: 'html-button-response',
+      stimulus: 'Did the two sounds match?',
+      choices: ['Yes, they matched', 'No, they did not match'],
+      data:
+        {designation: 'induction',
+        sound1: jsPsych.timelineVariable('sound1'),
+        sound2: jsPsych.timelineVariable('sound2'),
+        syllable: jsPsych.timelineVariable('syllable'),
+        correctanswer: jsPsych.timelineVariable('correct')},
+    	on_finish: function(data) {
+    		var button_pressed = data.button_pressed;
+    		if (button_pressed == data.correctanswer) {
+    			data.correct = 1;
+          feedback_text = '<p style="color:#054d00;"><b>Correct!</b></p>';
+    		} else {
+    			data.correct = 0;
+          feedback_text = '<p style="color:#690000;"><b>Incorrect!</b></p>';
+    		}
+    	},
+      post_trial_gap: 500,
+      response_ends_trial: true
+    };
+
+    var induction_feedback = {
+      type: 'html-keyboard-response',
+      stimulus: function() {
+        return feedback_text;
+      },
+      choices: jsPsych.NO_KEYS,
+      trial_duration: 1000,
+      post_trial_gap: 500
+    };
+
+    var speech_procedure_2 = {
+      timeline: [induction_play_speech1, induction_play_speech2, induction_judgement, induction_feedback],
+      timeline_variables: induction_test_timelinevars,
+      randomize_order: true
+    };
+
+
+    var speech_procedure_2_final = {
+      timeline: [speech_procedure_2_instructions, speech_procedure_2]
+    }
+
+    timeline.push(speech_procedure_2_final);
+
+    /**************************/
+    /** SL TRAINING TASK **/
+    /**************************/
+    /*
+
+    This is where participants are
+    trained on the statistical
+    language. Participants are
+    simultaneously completing a
+    language (reading comprehension)
+    task.
+
+    There are 3 trials (4-minutes each)
+    in total, resulting in 12 minutes of
+    training on the statistical structure
+
+    */
+
+
+    timeline.push(slTrain);
+    var SLTRAIN_SOUNDS = return_slTrain_folder();
+
+    /***********************************/
+    /***** Familiarity Rating Task *****/
+    /***********************************/
+
+    // FAMILIARITY TASK //
+    /*
+    Here, participants are presented with
+    trisyllabic combinations and must determine
+    how familiar they sound based on the first
+    part of the study.
+
+    There are 12 total trials (randomized):
+    4 words (2 of 2 expected transitions)
+    4 part-words (1 of 2 expected transitions)
+    4 non-words (0 of 2 expected transitions)
+
+    //Get the timeline variables (FAM_PROC) and the audio string (return_fam_sounds();) from slFamiliarity.js
+
+    */
+
+    timeline.push(FAM_PROC_FINAL);
+    var FAM_SOUNDS = return_fam_sounds();
+
+
+    /*********************************/
+    /***** Target-Detection Task *****/
+    /*********************************/
+    /*
+    This is the final of three assessments of learning.
+    The target-detection task is a more implicit measure
+    of learning. Participants hear shorter streams of
+    syllables, similar to those heard in the exposure/
+    training phase. On each trial, a syllable serves as
+    the 'target' (e.g., "BA"). Participants must press
+    the spacebar as quickly as possible whenever they
+    hear the target syllable. RTs should be FASTER for
+    syllables that appear at the ends of 'words' (e.g.,
+    "LU", because "GA" and "MI" will always precede it
+    and thus serve as a kind of prime.
+
+
+    //Get the timeline variables (TD_FINAL) and the audio string (TD_AUD) from targetDetection.js
+
+    */
+
+    timeline.push(TD_FINAL);
+    var TD_SOUNDS = return_td_sounds();
+
+
+    ///Extra Questions////
+    var soundperception = {
+      type: 'survey-text',
+      questions: [{
+        prompt: "During this study you heard streams of sounds. Please describe the sounds that you heard (e.g., alien sounds, robotic noises).",
+        rows: 5,
+        columns: 40
+      }, ]
+    };
+
+    ///Add Additional Questions////
+    var speech_followup_01 = {
+      type: 'html-button-response',
+      stimulus: "<p>During the study you listened to a stream of nonsense sounds.</p><p>Did you perceive this stream as containing syllables that sound like those found in speech (e.g. 'ta' or 'ru')?</p>",
+      choices: ["<b>No</b></br>the stream did not sound like it </br>contained speech-like syllables", "<b>Yes</b></br>the stream did sound like it </br>contained speech-like syllables"],
+      data: {designation: 'q-soundlikespeech-2afc'},
+      post_trial_gap: 250
+    };
+
+    var speech_followup_02 = {
+      type: 'html-slider-response',
+      stimulus: "<p>Using the slider, please rate the extent to which you perceived the sounds as speech-like syllables</p><p>(1 corresponds to <em>the sounds did not sound like syllables found in speech at all</em>)</p><p>(10 corresponds to <em>I could clearly hear the sounds as syllables found in speech)</em></p>",
+      min: 1,
+      max: 10,
+      slider_start: 5,
+      labels: ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"],
+      data: {designation: 'q-soundlikespeech-slider'}
+    };
+
+    var speech_followup_03 = {
+      type: 'survey-multi-choice',
+      questions: [
+      {
+      prompt: "At what point during the study did you begin to perceive the stream as containing speech-like syllables?",
+      name: 'timecourseSpeech',
+      options: ["<b>During the first task:</b> When you either (a) indicated whether the sound was to the right or to the left, <b>or</b> (b) indicated which written syllable best matched the sound played", "<b>During the second task:</b> When listening to the stream of sounds for 12 minutes" , "<b>During the third task:</b> When listening to short sounds and rating how familiar they sounded", "<b>During the fourth task:</b> When listening to short sequences of sounds and listening for a target sound", "I never heard the sounds as speech."],
+      required: false
+    }],
+    data: {designation: 'q-soundlikespeech-timecourse'}
+  };
+
+    var transcription_instruct = {
+      type: 'html-button-response',
+      stimulus: "In this part of the study, you will listen to short sounds. You will then be asked if each sound was speech-like or not.",
+      choices: ['Begin']
+    };
+
+    var transcription_timelinevars = [{
+        sounds: 'sounds/syllables/fe_SWS.wav',
+        syllable: 'FEE',
+        syllable_type: 'sinewave'
+      },
+      {
+        sounds: 'sounds/syllables/fu_SWS.wav',
+        syllable: 'FOO',
+        syllable_type: 'sinewave'
+      },
+      {
+        sounds: 'sounds/syllables/ge_SWS.wav',
+        syllable: 'GEE',
+        syllable_type: 'sinewave'
+      },
+      {
+        sounds: 'sounds/syllables/ko_SWS.wav',
+        syllable: 'KO',
+        syllable_type: 'sinewave'
+      },
+      {
+        sounds: 'sounds/syllables/me_SWS.wav',
+        syllable: 'MEE',
+        syllable_type: 'sinewave'
+      },
+      {
+        sounds: 'sounds/syllables/ni_SWS.wav',
+        syllable: 'NIGH',
+        syllable_type: 'sinewave'
+      },
+      {
+        sounds: 'sounds/syllables/pu_SWS.wav',
+        syllable: 'POO',
+        syllable_type: 'sinewave'
+      },
+      {
+        sounds: 'sounds/syllables/re_SWS.wav',
+        syllable: 'REE',
+        syllable_type: 'sinewave'
+      },
+      {
+        sounds: 'sounds/syllables/ru_SWS.wav',
+        syllable: 'RUE',
+        syllable_type: 'sinewave'
+      },
+      {
+        sounds: 'sounds/syllables/su_SWS.wav',
+        syllable: 'SUE',
+        syllable_type: 'sinewave'
+      },
+      {
+        sounds: 'sounds/syllables/ta_SWS.wav',
+        syllable: 'TA',
+        syllable_type: 'sinewave'
+      },
+      {
+        sounds: 'sounds/syllables/ti_SWS.wav',
+        syllable: 'TIE',
+        syllable_type: 'sinewave'
+      },
+    ];
+
+    var transcription_play = {
+      type: 'audio-keyboard-response',
+      stimulus: jsPsych.timelineVariable('sounds'),
+      choices: jsPsych.NO_KEYS,
+      trial_ends_after_audio: true
+    };
+
+    var heardasspeech; //toggle this depending on response
+
+    var transcription_judgement = {
+      type: 'html-button-response',
+      stimulus: 'Did you hear the sound as speech-like?',
+      choices: ['No', 'Yes'],
+      data: {
+        designation: 'TRANSCRIPTION-JUDGE',
+        syllable: jsPsych.timelineVariable('syllable'),
+        syllable_type: jsPsych.timelineVariable('syllable_type')
+      },
+      on_finish: function(data) {
+        heardasspeech = data.button_pressed
+      }
+    };
+
+    var transcription_followup = {
+      type: 'survey-text',
+      questions: [{
+        prompt: "Please type out the sound that you heard to the best of your ability.",
+        rows: 2,
+        columns: 20
+      }, ],
+      data: {
+        designation: 'TRANSCRIPTION-FOLLOWUP',
+        syllable: jsPsych.timelineVariable('syllable'),
+        syllable_type: jsPsych.timelineVariable('syllable_type')
+      }
+    };
+
+    var followup_proc = {
+      timeline: [transcription_followup],
+      conditional_function: function() {
+        if (heardasspeech) {
+          return true;
+        } else {
+          return false
+        }
+      }
+    };
+
+    var fiaxtion = {
+      type: 'html-keyboard-response',
+      stimulus: '<p style="font-size:40px;">+</p>',
+      trial_duration: 1000
+    };
+
+    var transcription_procedure = {
+      timeline: [transcription_play, transcription_judgement, followup_proc, fixation],
+      timeline_variables: transcription_timelinevars,
+      randomize_order: true
+    };
+
+    var transcription_procedure_final = {
+      timeline: [soundperception, speech_followup_01, speech_followup_02, speech_followup_03, transcription_instruct, transcription_procedure]
+    };
+
+    timeline.push(transcription_procedure_final);
+
+
+
+    //transcription of normal, non-SWS syllables
+
+    var transcription_normal_timelinevars = [{
+        sounds: 'sounds/induction/fe_C.wav',
+        syllable: 'FEE',
+        syllable_type: 'non-sinewave'
+      },
+      {
+        sounds: 'sounds/induction/fu_C.wav',
+        syllable: 'FOO',
+        syllable_type: 'non-sinewave'
+      },
+      {
+        sounds: 'sounds/induction/ge_C.wav',
+        syllable: 'GEE',
+        syllable_type: 'non-sinewave'
+      },
+      {
+        sounds: 'sounds/induction/ko_C.wav',
+        syllable: 'KO',
+        syllable_type: 'non-sinewave'
+      },
+      {
+        sounds: 'sounds/induction/me_C.wav',
+        syllable: 'MEE',
+        syllable_type: 'non-sinewave'
+      },
+      {
+        sounds: 'sounds/induction/ni_C.wav',
+        syllable: 'NIGH',
+        syllable_type: 'non-sinewave'
+      },
+      {
+        sounds: 'sounds/induction/pu_C.wav',
+        syllable: 'POO',
+        syllable_type: 'non-sinewave'
+      },
+      {
+        sounds: 'sounds/induction/re_C.wav',
+        syllable: 'REE',
+        syllable_type: 'non-sinewave'
+      },
+      {
+        sounds: 'sounds/induction/ru_C.wav',
+        syllable: 'RUE',
+        syllable_type: 'non-sinewave'
+      },
+      {
+        sounds: 'sounds/induction/su_C.wav',
+        syllable: 'SUE',
+        syllable_type: 'non-sinewave'
+      },
+      {
+        sounds: 'sounds/induction/ta_C.wav',
+        syllable: 'TA',
+        syllable_type: 'non-sinewave'
+      },
+      {
+        sounds: 'sounds/induction/ti_C.wav',
+        syllable: 'TIE',
+        syllable_type: 'non-sinewave'
+      },
+    ];
+
+
+    var transcription_procedure_normal = {
+      timeline: [transcription_play, transcription_judgement, followup_proc, fixation],
+      timeline_variables: transcription_normal_timelinevars,
+      randomize_order: true
+    }
+
+    timeline.push(transcription_procedure_normal);
+
+
+
+        /****************************/
+        /** SWS SENTENCE INDUCTION **/
+        /****************************/
+        /*
+
+        This is meant to further examine how well participants understand the SWS as speech.
+
+        */
+        //get non-attenuated sentences
+
+        var sentence_sws_speech_instruct = {
+          type: 'html-button-response',
+          stimulus: '<p>Thank you for your answers.</p><p>You will now listen to heavily manipulated complete sentences.</p>'+
+                    '<p>Please listen carefully to each sentence. After each sentence, you will be asked to type back what you heard to the best of your ability. After you provide your response, you will be given feedback about the correct answer.</p>'+
+                    '<p>There are 10 sentences in total.',
+          choices: ['Begin'],
+          post_trial_gap: 500
+        };
+
+        var sws_sentence_tlinevars = [
+          {
+            sound_speech: 'sounds/sentences/14_01_cfSWS.mp3',
+            speechCorrect: 'A cramp is no small danger on a swim.',
+            keywords: ['cramp','no','small','danger','swim']
+          },
+          {
+            sound_speech: 'sounds/sentences/14_02_cfSWS.mp3',
+            speechCorrect: 'He said the same phrase thirty times.',
+            keywords: ['said','same','phrase','thirty','times']
+          },
+          {
+            sound_speech: 'sounds/sentences/14_03_cfSWS.mp3',
+            speechCorrect: 'Pluck the bright rose without leaves.',
+            keywords: ['pluck','bright','rose','without','leaves']
+          },
+          {
+            sound_speech: 'sounds/sentences/14_04_cfSWS.mp3',
+            speechCorrect: 'Two plus seven is less than ten.',
+            keywords: ['two','plus','seven','less','ten']
+          },
+          {
+            sound_speech: 'sounds/sentences/14_05_cfSWS.mp3',
+            speechCorrect: 'The glow deepened in the eyes of the sweet girl.',
+            keywords: ['glow','deepened','eyes','sweet','girl']
+          },
+          {
+            sound_speech: 'sounds/sentences/14_06_cfSWS.mp3',
+            speechCorrect: 'Bring your problems to the wise chief.',
+            keywords: ['bring','your','problems','wise','chief']
+          },
+          {
+            sound_speech: 'sounds/sentences/14_07_cfSWS.mp3',
+            speechCorrect: 'Write a fond note to the friend you cherish.',
+            keywords: ['write','fond','note','friend','cherish']
+          },
+          {
+            sound_speech: 'sounds/sentences/14_08_cfSWS.mp3',
+            speechCorrect: 'Clothes and lodging are free to new men.',
+            keywords: ['clothes','lodging','free','new','men']
+          },
+          {
+            sound_speech: 'sounds/sentences/14_09_cfSWS.mp3',
+            speechCorrect: 'We frown when events take a bad turn.',
+            keywords: ['frown','events','take','bad','turn']
+          },
+          {
+            sound_speech: 'sounds/sentences/14_10_cfSWS.mp3',
+            speechCorrect: 'Port is a strong wine with a smoky taste.',
+            keywords: ['port','strong','wine','smoky','taste']
+          }
+        ];
+
+
+        //functions for calculating sums and means of arrays
+        const arrSum = arr => arr.reduce((a,b) => a + b, 0)
+        const arrAvg = arr => arr.reduce((a,b) => a + b, 0) / arr.length
+
+    var sentence_response_sws = {
+        type: 'sentence-resp',
+        questions: [{prompt: "", value: "", rows: 2, columns: 75}],
+        post_trial_gap: 250,
+        data: {sentence: jsPsych.timelineVariable('speechCorrect'), keywords: jsPsych.timelineVariable('keywords'), designation: 'SWS-SENT-RESPONSE'},
+        preamble: "<p><b>Please click on the response box and then type back what you heard.</b></br>Do not worry about capitalization or punctuation. Please try your best to spell as accurately as possible.</p>",
+        	on_finish: function(data){
+        		var answer = JSON.parse(jsPsych.data.get().last(1).values()[0].responses).Q0; //this is the extracted string they typed
+        		var correctANS = data.keywords; //this is the array of keywords
+
+        		//Preprocess the responses (remove punctuation, spaces etc)
+        		var answerNew = answer.split('.').join(""); //remove period punctuation
+        		answerNew = answerNew.split(',').join(""); //remove comma punctuation
+        		answerNew = answerNew.split('!').join(""); //remove exclamation punctuation
+        		answerNew = answerNew.split('?').join(""); //remove question punctuation
+        		answerNew = answerNew.toUpperCase(); //standardize capitalization
+        		answerNew = answerNew.replace(/(\r\n|\n|\r)/gm, " "); //remove all line breaks
+        		//Convert to uppercase
+        		var correctUPPER= [];
+        		for (i=0; i < correctANS.length; i++){
+        			correctUPPER[i] = correctANS[i].toUpperCase();
+        		}
+
+        		var answer_parsed = answerNew.split(" "); //split typed-in answer based on space
+        		var anstester = [0,0,0,0,0]; //array for storing correct answers....if there is a match, the 0 is changed to a 1
+
+        		for (i = 0; i < answer_parsed.length; i++) {
+        			var cur = answer_parsed[i];
+        			for (j = 0; j < correctUPPER.length; j++) {
+        				var key = correctUPPER[j];
+        				if(cur == key) {
+        					anstester[j] = 1;
+        					correctUPPER[j] = null; //removes the answer so it cannot be counted twice
+        				}
+        			}
+        		}
+
+        		var totalCorrect = arrSum(anstester); //0-5 value for number of keywords identified
+        		var propCorrect = arrAvg(anstester); //0-1 value for proportion of words on the trial
+
+        		//Add these processed answers to the data output
+        		jsPsych.data.addDataToLastTrial({
+        			typed_resp: answerNew,
+        			keyword1_acc: anstester[0],
+        			keyword2_acc: anstester[1],
+        			keyword3_acc: anstester[2],
+        			keyword4_acc: anstester[3],
+        			keyword5_acc: anstester[4],
+        			total_acc: totalCorrect,
+        			prop_acc: propCorrect
+        		});
+        	}
+        };
+
+        var induction_play_speech = {
+          type: 'audio-keyboard-response',
+          stimulus: jsPsych.timelineVariable('sound_speech'),
+          choices: jsPsych.NO_KEYS,
+          trial_ends_after_audio: true
+        };
+
+        var sentence_sws_feedback_pre = {
+          type: 'html-keyboard-response',
+          prompt: jsPsych.timelineVariable('speechCorrect'),
+          stimulus: '',
+          trial_duration: 1000,
+          choices: jsPsych.NO_KEYS
+        };
+
+        var sentence_sws_feedback_post = {
+          type: 'html-keyboard-response',
+          prompt: jsPsych.timelineVariable('speechCorrect'),
+          stimulus: '',
+          trial_duration: 1000,
+          choices: jsPsych.NO_KEYS,
+          post_trial_gap: 500
+        };
+
+        var sentence_sws_feedback_play = {
+          type: 'audio-keyboard-response',
+          prompt: jsPsych.timelineVariable('speechCorrect'),
+          stimulus: jsPsych.timelineVariable('sound_speech'),
+          choices: jsPsych.NO_KEYS,
+          trial_ends_after_audio: true
+        };
+
+        var sws_sent_interim = {
+          type:'html-button-response',
+          stimulus: '<p>Press the button below when you are ready to continue.</p>',
+          choices: ['Continue'],
+          post_trial_gap: 500
+        };
+
+        var sentence_sws_speech_proc = {
+          timeline: [induction_play_speech, sentence_response_sws, sentence_sws_feedback_pre, sentence_sws_feedback_play, sentence_sws_feedback_post, sws_sent_interim],
+          timeline_variables: sws_sentence_tlinevars,
+          randomize_order: true
+        };
+
+        var sentence_sws_speech_final = {
+          timeline: [sentence_sws_speech_instruct, sentence_sws_speech_proc]
+        };
+
+        var sws_sentence_preload = [];
+
+        //push relevant sound files to a preload folder depending on condition
+        for(var i=0; i<sws_sentence_tlinevars.length; i++){
+            sws_sentence_preload.push(sws_sentence_tlinevars[i].sound_speech);
+        };
+
+
+          timeline.push(sentence_sws_speech_final)
+
+
+    /*************/
+    /** Wrap-Up **/
+    /*************/
+
+    //Save the Data
+    var backup_data = {
+      type: 'html-keyboard-response',
+      stimulus: '<p>Saving your results...</p>',
+      choices: jsPsych.NO_KEYS,
+      trial_duration: 1000,
+      on_finish: function() {
+        var csvData = jsPsych.data.get().csv(); //this is the csv data
+        console.log(csvData);
+        var formData = {
+          exp: "SL_NONSPEECH",
+          subj: identifier,
+          results: csvData
+        };
+        $.post(
+          "https://svanhedger.pythonanywhere.com/data",
+          formData
+        );
+      }
+    };
+
+    timeline.push(backup_data);
+
+    /********************/
+    /** PAVLOVIA CLOSE **/
+    /********************/
+
+    //Close the connection to Pavlovia
+    var pavlovia_close = {
+      type: "pavlovia",
+      command: "finish"
+    };
+
+  //  timeline.push(pavlovia_close);
+
+
+    //Final Landing Page
+    var surveylink = "https://uwo.eu.qualtrics.com/jfe/form/SV_eM6GpV2EwU5DWOa?SUBJID=" + identifier + "&id=%SURVEY_CODE%"; //survey link that includes participant ID
+
+    var final_page = {
+      type: 'html-keyboard-response',
+      stimulus: '<p>Thank you for your answers. This concludes the main part of the study.</p>' +
+        '<p>The final part of the study is a short questionnaire.</p><p>Please click on the link below to be redirected to the questionnaire.</p>' +
+        '<p><a href=' + surveylink + '>Start Survey</a>',
+      choices: jsPsych.NO_KEYS
+    };
+
+    timeline.push(final_page);
+
+
+    /*******************/
+    /** PRELOAD FILES **/
+    /*******************/
+
+
+    var SYLLABLES = [
+      'sounds/induction/ta_SWS.wav', 'sounds/induction/fu_SWS.wav', 'sounds/induction/ko_SWS.wav',
+      'sounds/induction/ge_SWS.wav', 'sounds/induction/re_SWS.wav', 'sounds/induction/me_SWS.wav',
+      'sounds/induction/ru_SWS.wav', 'sounds/induction/pu_SWS.wav', 'sounds/induction/ni_SWS.wav',
+      'sounds/induction/fe_SWS.wav', 'sounds/induction/ti_SWS.wav', 'sounds/induction/su_SWS.wav',
+      'sounds/induction/ta_C.wav', 'sounds/induction/fu_C.wav', 'sounds/induction/ko_C.wav',
+      'sounds/induction/ge_C.wav', 'sounds/induction/re_C.wav', 'sounds/induction/me_C.wav',
+      'sounds/induction/ru_C.wav', 'sounds/induction/pu_C.wav', 'sounds/induction/ni_C.wav',
+      'sounds/induction/fe_C.wav', 'sounds/induction/ti_C.wav', 'sounds/induction/su_C.wav',
+      'sounds/induction/ta1f.wav', 'sounds/induction/fu1f.wav', 'sounds/induction/ko1f.wav',
+      'sounds/induction/ge1f.wav', 'sounds/induction/re1f.wav', 'sounds/induction/me1f.wav',
+      'sounds/induction/ru1f.wav', 'sounds/induction/pu1f.wav', 'sounds/induction/ni1f.wav',
+      'sounds/induction/fe1f.wav', 'sounds/induction/ti1f.wav', 'sounds/induction/su1f.wav',
+    ];
+
+    var aud_preload = [...TD_SOUNDS, ...FAM_SOUNDS, ...SYLLABLES, ...SLTRAIN_SOUNDS, ...CALIB_SOUNDS, ...sws_sentence_preload]; //this is the final variable for preloading
+
+    jsPsych.init({
+      timeline: timeline,
+      preload_audio: aud_preload,
+      override_safe_mode: true
+    });
+  </script>
+</body>
+
+</html>
